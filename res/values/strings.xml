@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="app_name">AndroidRun v0.01</string>
+    <string name="distance_label">0.00 km</string>
+    <string name="distance_label_unit">km</string>
+    <string name="duration_label">--:--:--</string>    
+    <string name="instant_speed_label">---- km/h</string>
+    <string name="average_speed_label">---- av. km/h</string>
+    <string name="elevation_label">+0m / -0m</string>
+    <string name="coordinate_e_label">-- E</string>
+    <string name="coordinate_n_label">-- N</string>
+    <string name="speed_unit_label">km/h</string>    
+    <string name="aver_speed_unit_label">km/h (aver)</string>        
+    <string name="debug_string"></string>
+    <string name="satellite_label">GPS: No signal</string>
+    <string name="saveDirectory">RUN-Data</string>
+    
+    
+    <string name="button_OK">OK</string>
+    <string name="button_YES">Yes</string>
+    <string name="button_CANCEL">Cancel</string>
+    <string name="button_start_resume">"(Re)Start"</string>
+    <string name="button_stop">"Stop"</string>
+    <string name="button_reset">Reset</string>
+    
+    
+    <string name="gps_status_no_upd">Status changed : Not yet updated</string>
+    <string name="gps_status_oos">Status changed : Out of service</string>
+    <string name="gps_status_avail">Status changed : Available</string>
+    <string name="gps_status_unavail">Status changed : Temporary unavailable</string>
+    <string name="gps_status_unknown">Status changed : Unknown</string>
+    <string name="gps_waiting_fix">Waiting for first GPS fix...</string>
+    <string name="gps_no_signal">GPS: No Signal</string>
+    <string name="gps_low_signal">GPS: Low Signal</string>
+    <string name="gps_aver_signal">GPS: Average Signal</string>
+    <string name="gps_good_signal">GPS: Good Signal</string>
+    <string name="gps_excel_signal">GPS: Excellent Signal</string>
+    
+    
+    <string name="logs_reset">Reset on user request.</string>
+    <string name="logs_start_session">Starting new log session.</string>
+    <string name="logs_gps_update_interval">gps_update_interval = </string>
+    <string name="logs_gps_min_distance">gps_min_distance = </string>
+    <string name="logs_required_accuracy">required_accuracy = </string>
+    <string name="logs_csv_format">CSV format : OLC; Distance; Delta Dist; Accuracy; Inst Speed; deltaTSeconds; altitude; bearing; latitude; longitude; lastAltitude; ascent; descent; SatNumber; UpdateNumber; State;</string>
+    <string name="logs_pause_resume">Device is resuming from pause at : </string>
+    <string name="logs_pause_duration">Slept for : </string>
+    <string name="logs_pause_duration_unit">seconds</string>
+    <string name="logs_entering_pause">"Device is entering Pause at : </string>
+    <string name="logs_tracking_is">Tracking is </string>
+    <string name="logs_tracking_started">started</string>
+    <string name="logs_tracking_stopped">stopped</string>
+    <string name="logs_no_tracking">Not tracking</string>
+    <string name="logs_tracking_ok">OK</string>
+    <string name="logs_bad_accuracy">Bad accuracy</string>
+    <string name="logs_location_is_null">Error : Location object received was null.</string>
+    <string name="logs_gps_enabled">onProviderEnabled event received : </string>
+    <string name="logs_gps_disabled">onProviderDisabled event received : </string>
+    
+    
+    <string name="error_logs_ko">Loging system not ready.</string>
+    <string name="error_logs_ko_details">The application is unable to write file on internal storage. Maybe sdcard isn\'t mounted, is shared via USB, or is Read Only. No data can be saved at this time. Correct the problem and then restart the application.</string>
+
+
+    <string name="msg_close">Close application ?</string>
+    <string name="msg_close_confirm">Your are about to close the application. All active tracking, measurment and logging will be stopped. Do you really want to quit application ?</string>
+    <string name="msg_reset">Reset application ?</string>
+    <string name="msg_reset_confirm">Your are about to reset the application. All active tracking, measurment will be resetted. Do you really want to reset application ?</string>
+    <string name="msg_gps_disabled">GPS is disabled.</string>
+    <string name="msg_gps_disabled_confirm">GPS is present but disabled. Would you like to enable GPS ? Cancelling will close the application.</string>
+
+</resources>
