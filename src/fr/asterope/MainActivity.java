@@ -1,24 +1,24 @@
 /**
- * 
+ *
  * AndroidRun, basic runner's android application. Calculates distance, speed
  * and other usefull values taken from GPS device.
- * 
+ *
  * Copyright (C) 2014 Bruno Vedder
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 3 of the License, or (at your option) any later
  * version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- * 
+ *
  */
 package fr.asterope;
 
@@ -69,21 +69,30 @@ public class MainActivity extends Activity implements LocationListener
     private String logFilename = null;
     private boolean firstGPSFixReceived = false;
 
-    // Elevation Gain related variables.
-    static final private int ALTITUDE_ARRAY_SIZE = 4;
-    static final private double MAX_ELEVATION_DELTA = 4.0;
-    private float[] altitudeBuffer = new float[ALTITUDE_ARRAY_SIZE];
-    private int altitudeBufferIndex = 0;
-    private int altitudeBufferValueNumber = 0;
-    private float lastAltitude = -1.0f;     // -1.0f means non initialised.
-    private float ascent = 0.0f;            // positive elevation gain in m.
-    private float descent = 0.0f;           // negative elevation gain in m.
-
     // App constants
-    static final private float requiredAccuracy = 10.0f;        // Ignore precision below this value, in  meters. 
-    static final private int gps_update_interval = 7500;         // in milliseconds, 0 means as fast as possibile
+    static final private float requiredAccuracy = 10.0f;       // Ignore precision below this value, in  meters. 
+    static final private int gps_update_interval = 8000;       // in milliseconds, 0 means as fast as possibile
     static final private float gps_min_distance = 0.0f;        // in meter, 0 means any distances.
     static final private String fileExtension = ".csv";
+
+    /**
+     *
+     * Elevation Gain related variables. MAX_ELEVATION_DELTA is used to skip
+     * false values. False value occurs when the satellite number reach 4, the
+     * minimal number in order to get altitude. Before altitude was 0, and after
+     * the altitude is the altitude of your location. This cause an artificial
+     * elevation gain that we need to skip.
+     *
+     * Actually the max delta altitude is : gps_update_interval ran at 20km/h
+     * with a slop of 45°.
+     *
+     * (gps_update_interval /1000) * (5.5m /s) * sin (45 * PI/180); This gives
+     * 31 meters.
+     */
+    static final private double MAX_ELEVATION_DELTA = 31.0;
+    private double lastAltitude = -1.0f;        // -1.0f means non initialised.
+    private float ascent = 0.0f;                // positive elevation gain in m.
+    private float descent = 0.0f;               // negative elevation gain in m.
 
     private Handler myHandler = null;
     private Runnable myRunnable = null;
@@ -110,12 +119,6 @@ public class MainActivity extends Activity implements LocationListener
         lastAltitude = -1.0f;
         ascent = 0.0f;
         descent = 0.0f;
-        altitudeBufferIndex = 0;
-        altitudeBufferValueNumber = 0;
-        for (int i = 0; i < ALTITUDE_ARRAY_SIZE; i++)
-        {
-            altitudeBuffer[i] = 0.0f;
-        }
 
         logs.safeWrite(getString(R.string.logs_reset));
 
@@ -163,7 +166,6 @@ public class MainActivity extends Activity implements LocationListener
                     {
                         local_elapsed_seconds = (long) elapsed_seconds;
                     }
-//                    deltaTseconds = (float) ((location.getElapsedRealtimeNanos() - last_position.getElapsedRealtimeNanos()) / 1000000000.0);
 
                     long hour = local_elapsed_seconds / 3600;
                     long min = (local_elapsed_seconds % 3600) / 60;
@@ -192,10 +194,7 @@ public class MainActivity extends Activity implements LocationListener
             gpsStatus = savedInstanceState.getString("gpsStatus");
             logFilename = savedInstanceState.getString("logFilename");
             firstGPSFixReceived = savedInstanceState.getBoolean("firstGPSFixReceived");
-            altitudeBufferIndex = savedInstanceState.getInt("altitudeBufferIndex");
-            altitudeBufferValueNumber = savedInstanceState.getInt("altitudeBufferValueNumber");
             lastAltitude = savedInstanceState.getFloat("lastAltitude");
-            altitudeBuffer = savedInstanceState.getFloatArray("altitudeBuffer");
             ascent = savedInstanceState.getFloat("ascent");
             descent = savedInstanceState.getFloat("descent");
 
@@ -257,7 +256,7 @@ public class MainActivity extends Activity implements LocationListener
 
         if ((ExternalFileLogger.isExternalStorageWritable() == false) || (saveSubDirExists == false))
         {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, THEME_HOLO_DARK);
             builder.setTitle(getString(R.string.error_logs_ko));
             builder.setMessage(getString(R.string.error_logs_ko_details));
             builder.setPositiveButton(getString(R.string.button_OK), new DialogInterface.OnClickListener()
@@ -284,7 +283,7 @@ public class MainActivity extends Activity implements LocationListener
     public void onBackPressed()
     {
         //Ask the user to confirm close app.
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, THEME_HOLO_DARK);
         builder.setTitle(getString(R.string.msg_close));
         builder.setMessage(getString(R.string.msg_close_confirm));
         builder.setPositiveButton(getString(R.string.button_YES), new DialogInterface.OnClickListener()
@@ -457,10 +456,7 @@ public class MainActivity extends Activity implements LocationListener
         savedInstanceState.putString("logFilename", logFilename);
         savedInstanceState.putBoolean("firstGPSFixReceived", firstGPSFixReceived);
 
-        savedInstanceState.putFloat("lastAltitude", lastAltitude);
-        savedInstanceState.putInt("altitudeBufferIndex", altitudeBufferIndex);
-        savedInstanceState.putInt("altitudeBufferValueNumber", altitudeBufferValueNumber);
-        savedInstanceState.putFloatArray("altitudeBuffer", altitudeBuffer);
+        savedInstanceState.putDouble("lastAltitude", lastAltitude);
         savedInstanceState.putFloat("ascent", ascent);
         savedInstanceState.putFloat("descent", descent);
     }
@@ -538,7 +534,7 @@ public class MainActivity extends Activity implements LocationListener
     {
 
         //Ask the user to enable GPS
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, THEME_HOLO_DARK);
         builder.setTitle(getString(R.string.msg_reset));
         builder.setMessage(getString(R.string.msg_reset_confirm));
         builder.setPositiveButton(getString(R.string.button_YES), new DialogInterface.OnClickListener()
@@ -700,7 +696,12 @@ public class MainActivity extends Activity implements LocationListener
                         elapsed_seconds += deltaTseconds;
                         distance += deltaD;
                         average_speed = (distance / (float) elapsed_seconds);
-                        computeElevationGain(altitude);
+                        if (satelliteNumber >= 4)
+                        {
+                            // 4 satellites are the least expected to get 3D GPS fix (with altitude).
+                            computeElevationGain(altitude);
+                        }
+
                         state = getString(R.string.logs_tracking_ok);
                     }
                 }
@@ -735,69 +736,40 @@ public class MainActivity extends Activity implements LocationListener
      */
     void computeElevationGain(double alt)
     {
-        // 4 satellites are the least expected to get 3D GPS fix (with altitude).
-        if (satelliteNumber < 4)
-        {
-            return;
-        }
-
         // Check for infinity / NaN..
         if (Double.isInfinite(alt) || Double.isNaN(alt))
         {
             return;
         }
 
-        // New altitude received, store it in altitude buffer.
-        altitudeBuffer[altitudeBufferIndex] = (float) alt;
-        altitudeBufferIndex++;
-        if (altitudeBufferIndex == ALTITUDE_ARRAY_SIZE)
+        if (lastAltitude == -1.0f)
         {
-            altitudeBufferIndex = 0;
+            // First altitude value.
+            lastAltitude = alt;
         }
-
-        if (altitudeBufferValueNumber < ALTITUDE_ARRAY_SIZE)
+        else
         {
-            altitudeBufferValueNumber++;
-        }
+            // We already have an averaged altitude value, we can compute elevation gain.
+            double deltaH = alt - lastAltitude;
 
-        // If we have enough data, we can compute average altitude and get a value.
-        if (altitudeBufferValueNumber == ALTITUDE_ARRAY_SIZE)
-        {
-            float av_alt = 0.0f;
-            for (int i = 0; i < ALTITUDE_ARRAY_SIZE; i++)
+            // Basic check on delta elevation : No more  than a max value.
+            // This should be correlated with deltaT for better test.
+            if (Math.abs(deltaH) > MAX_ELEVATION_DELTA)
             {
-                av_alt += altitudeBuffer[i];
+                return;
             }
 
-            av_alt /= (float) ALTITUDE_ARRAY_SIZE;
-
-            if (lastAltitude == -1.0f)
+            if (deltaH < 0)
             {
-                // First altitude value.
-                lastAltitude = av_alt;
+                // descent only cumulates negatives values.
+                descent += deltaH;
             }
             else
             {
-                // We already have an averaged altitude value, we can compute elevation gain.
-                float deltaH = av_alt - lastAltitude;
-
-                // Basic check on delta elevation : No more  than a max value.
-                // This should be correlated with deltaT for better test.
-                if (Math.abs(deltaH) > MAX_ELEVATION_DELTA)
-                {
-                    return;
-                }
-                if (deltaH < 0)
-                {
-                    descent += deltaH;
-                }
-                else
-                {
-                    ascent += deltaH;
-                }
-
-                lastAltitude = av_alt;
+                // ascent only cumulates positives values.
+                ascent += deltaH;
             }
+            lastAltitude = alt;
         }
     }
 

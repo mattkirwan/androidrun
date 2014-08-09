@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <string name="app_name">AndroidRun v0.01</string>
+    <string name="app_name">AndroidRun v0.02</string>
     <string name="distance_label">0.00 km</string>
     <string name="distance_label_unit">km</string>
     <string name="duration_label">--:--:--</string>    
