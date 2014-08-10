@@ -77,19 +77,14 @@ public class MainActivity extends Activity implements LocationListener
 
     /**
      *
-     * Elevation Gain related variables. MAX_ELEVATION_DELTA is used to skip
+     * Elevation Gain related variables. MAX_ELEVATION_DELTA_PER_SECOND is used to skip
      * false values. False value occurs when the satellite number reach 4, the
      * minimal number in order to get altitude. Before altitude was 0, and after
      * the altitude is the altitude of your location. This cause an artificial
      * elevation gain that we need to skip.
      *
-     * Actually the max delta altitude is : gps_update_interval ran at 20km/h
-     * with a slop of 45°.
-     *
-     * (gps_update_interval /1000) * (5.5m /s) * sin (45 * PI/180); This gives
-     * 31 meters.
      */
-    static final private double MAX_ELEVATION_DELTA = 31.0;
+    static final private double MAX_ELEVATION_DELTA_PER_SECOND = 5.0;
     private double lastAltitude = -1.0f;        // -1.0f means non initialised.
     private float ascent = 0.0f;                // positive elevation gain in m.
     private float descent = 0.0f;               // negative elevation gain in m.
@@ -156,7 +151,7 @@ public class MainActivity extends Activity implements LocationListener
                 TextView tv = (TextView) findViewById(R.id.duration_label);
                 if (tv != null)
                 {
-                    long local_elapsed_seconds = 0;
+                    long local_elapsed_seconds;
 
                     if ((started == true) && (last_position != null))
                     {
@@ -658,8 +653,8 @@ public class MainActivity extends Activity implements LocationListener
         if (location != null)
         {
             float accuracy = location.getAccuracy();
-            double deltaD = 0.0f;                        // Delta distance between two location updates.
-            float deltaTseconds = 0.0f;                 // Delta Time between two location updates, in nano seconds.
+            double deltaD = 0.0f;                           // Delta distance between two location updates.
+            float deltaTseconds = 0.0f;                     // Delta Time between two location updates, in seconds.
             String state = getString(R.string.logs_no_tracking);
             double altitude = 0.0;
             float bearing = 0.0f;
@@ -686,7 +681,7 @@ public class MainActivity extends Activity implements LocationListener
                 // Integrate distance if we already have one valid position.
                 if (last_position != null)
                 {
-                    if (started == true)
+                    if (started == true) 
                     {
                         WGS84Point src = new WGS84Point(last_position.getLatitude(), last_position.getLongitude());
                         WGS84Point dst = new WGS84Point(location.getLatitude(), location.getLongitude());
@@ -699,7 +694,7 @@ public class MainActivity extends Activity implements LocationListener
                         if (satelliteNumber >= 4)
                         {
                             // 4 satellites are the least expected to get 3D GPS fix (with altitude).
-                            computeElevationGain(altitude);
+                            computeElevationGain(altitude, deltaTseconds);
                         }
 
                         state = getString(R.string.logs_tracking_ok);
@@ -733,41 +728,35 @@ public class MainActivity extends Activity implements LocationListener
      * Compute elevation gain, based on altitude received on location update.
      *
      * @param alt : raw altitude received in Location oject.
+     * @param deltaT: delta time between two measures in seconds.
      */
-    void computeElevationGain(double alt)
+    void computeElevationGain(double alt, float deltaT)
     {
-        // Check for infinity / NaN..
-        if (Double.isInfinite(alt) || Double.isNaN(alt))
+        // Check for infinity / NaN or erratic values.
+        if (Double.isInfinite(alt) || Double.isNaN(alt) || (alt < 0.0))
         {
             return;
         }
 
-        if (lastAltitude == -1.0f)
-        {
-            // First altitude value.
-            lastAltitude = alt;
-        }
-        else
+        // lastAltitude first value is -1.0, meaning never updated, so update it once with alt value.
+        if (lastAltitude > 0.0)
         {
             // We already have an averaged altitude value, we can compute elevation gain.
             double deltaH = alt - lastAltitude;
 
-            // Basic check on delta elevation : No more  than a max value.
-            // This should be correlated with deltaT for better test.
-            if (Math.abs(deltaH) > MAX_ELEVATION_DELTA)
+            // Basic check on delta elevation : No more  than a max value per second.
+            if ((Math.abs(deltaH) / deltaT) <= MAX_ELEVATION_DELTA_PER_SECOND)
             {
-                return;
-            }
-
-            if (deltaH < 0)
-            {
-                // descent only cumulates negatives values.
-                descent += deltaH;
-            }
-            else
-            {
-                // ascent only cumulates positives values.
-                ascent += deltaH;
+                if (deltaH < 0)
+                {
+                    // descent only cumulates negatives values.
+                    descent += deltaH;
+                }
+                else
+                {
+                    // ascent only cumulates positives values.
+                    ascent += deltaH;
+                }
             }
             lastAltitude = alt;
         }
