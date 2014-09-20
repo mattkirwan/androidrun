@@ -77,11 +77,11 @@ public class MainActivity extends Activity implements LocationListener
 
     /**
      *
-     * Elevation Gain related variables. MAX_ELEVATION_DELTA_PER_SECOND is used to skip
-     * false values. False value occurs when the satellite number reach 4, the
-     * minimal number in order to get altitude. Before altitude was 0, and after
-     * the altitude is the altitude of your location. This cause an artificial
-     * elevation gain that we need to skip.
+     * Elevation Gain related variables. MAX_ELEVATION_DELTA_PER_SECOND is used
+     * to skip false values. False value occurs when the satellite number reach
+     * 4, the minimal number in order to get altitude. Before altitude was 0,
+     * and after the altitude is the altitude of your location. This cause an
+     * artificial elevation gain that we need to skip.
      *
      */
     static final private double MAX_ELEVATION_DELTA_PER_SECOND = 5.0;
@@ -681,7 +681,7 @@ public class MainActivity extends Activity implements LocationListener
                 // Integrate distance if we already have one valid position.
                 if (last_position != null)
                 {
-                    if (started == true) 
+                    if (started == true)
                     {
                         WGS84Point src = new WGS84Point(last_position.getLatitude(), last_position.getLongitude());
                         WGS84Point dst = new WGS84Point(location.getLatitude(), location.getLongitude());
@@ -732,7 +732,7 @@ public class MainActivity extends Activity implements LocationListener
      */
     void computeElevationGain(double alt, float deltaT)
     {
-        // Check for infinity / NaN or erratic values.
+        // Check for infinity / NaN values.
         if (Double.isInfinite(alt) || Double.isNaN(alt) || (alt < 0.0))
         {
             return;
@@ -758,8 +758,9 @@ public class MainActivity extends Activity implements LocationListener
                     ascent += deltaH;
                 }
             }
-            lastAltitude = alt;
         }
+        
+        lastAltitude = alt;
     }
 
 
